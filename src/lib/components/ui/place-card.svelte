@@ -32,7 +32,7 @@
 	};
 </script>
 
-<div class="max-w-4xl mx-auto my-8 bg-white shadow-xl rounded-xl overflow-hidden">
+<div class="w-full h-full my-8 bg-white shadow-xl rounded-xl">
 	<div class="md:flex">
 		<div class="md:shrink-0">
 			<img

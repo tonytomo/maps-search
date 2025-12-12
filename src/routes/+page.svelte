@@ -14,8 +14,9 @@
 	let places = $state<Place[]>([]);
 	let nextPageToken = $state('');
 
-	let clickedLat: number | null = $state(null);
-	let clickedLng: number | null = $state(null);
+	let clickedLat: number = $state(-7.549);
+	let clickedLng: number = $state(110.735);
+	let isMarked: boolean = $state(false);
 
 	async function onsubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -44,59 +45,44 @@
 	<title>{title}</title>
 </svelte:head>
 
-<h1>Test Maps</h1>
+<Maps {apiKey} mapId={PUBLIC_MAP_ID} bind:clickedLat bind:clickedLng bind:isMarked />
 
-<Maps {apiKey} mapId={PUBLIC_MAP_ID} bind:clickedLat bind:clickedLng />
+{#if isMarked}
+	<form {onsubmit} class="absolute top-4 right-4 bg-white w-64 flex flex-col gap-2 p-4">
+		<input required type="text" name="search" placeholder="Search" />
+		<input required type="hidden" name="latitude" placeholder="Latitude" value={clickedLat} />
+		<input required type="hidden" name="longitude" placeholder="Longitude" value={clickedLng} />
+		<div class="flex flex-row gap-2">
+			<input
+				required
+				type="range"
+				min="5000"
+				max="50000"
+				step="1000"
+				name="radius"
+				bind:value={radius}
+			/>
+			<span>{radius}</span>
+		</div>
 
-<hr />
+		<button type="submit">Submit</button>
+	</form>
 
-<h1>Test API</h1>
+	<div class="absolute bottom-0 w-full bg-white p-4 flex flex-col gap-2 h-[20vh] overflow-y-auto">
+		{#if loading}
+			<p>Loading...</p>
+		{/if}
 
-<form {onsubmit} class="flex flex-col gap-2">
-	<input required type="text" name="search" placeholder="Search" />
-	<input required type="hidden" name="latitude" placeholder="Latitude" value={clickedLat} />
-	<input required type="hidden" name="longitude" placeholder="Longitude" value={clickedLng} />
-	<div class="flex flex-row gap-2">
-		<input
-			required
-			type="range"
-			min="0"
-			max="50000"
-			step="1000"
-			name="radius"
-			bind:value={radius}
-		/>
-		<span>{radius}</span>
+		{#if !loading && places.length === 0}
+			<p>No places found</p>
+		{/if}
+
+		<div class="flex flex-col gap-2">
+			{#if places.length > 0}
+				{#each places as place (place.id)}
+					<PlaceCard {place} />
+				{/each}
+			{/if}
+		</div>
 	</div>
-
-	<button type="submit">Submit</button>
-</form>
-
-{#if loading}
-	<p>Loading...</p>
 {/if}
-
-{#if !loading && places.length === 0}
-	<p>No places found</p>
-{/if}
-
-{#if places.length > 0}
-	{#each places as place (place.id)}
-		<PlaceCard {place} />
-	{/each}
-{/if}
-
-<hr />
-
-<h1>Todos:</h1>
-<ul class="pl-4 list-decimal">
-	<li>000Init project</li>
-	<li>000Set the api key</li>
-	<li>000Create api response and modified types</li>
-	<li>000Set up the api request</li>
-	<li>000Test the api</li>
-	<li>000Create simple table to display</li>
-	<li>000Embed Google Maps</li>
-	<li>000Make function to get the latitude and longitude when click on maps</li>
-	<li>000Make simple form with search and radius input</li>
-</ul>
