@@ -45,13 +45,30 @@
 	<title>{title}</title>
 </svelte:head>
 
-<Maps {apiKey} mapId={PUBLIC_MAP_ID} bind:clickedLat bind:clickedLng bind:isMarked />
+<Maps {apiKey} mapId={PUBLIC_MAP_ID} {radius} bind:clickedLat bind:clickedLng bind:isMarked />
 
 {#if isMarked}
-	<form {onsubmit} class="absolute top-4 right-4 bg-white w-64 flex flex-col gap-2 p-4">
+	<form
+		{onsubmit}
+		class="absolute top-1/2 -translate-y-1/2 shadow-lg right-4 bg-white w-64 flex flex-col gap-2 p-4"
+	>
 		<input required type="text" name="search" placeholder="Search" />
-		<input required type="hidden" name="latitude" placeholder="Latitude" value={clickedLat} />
-		<input required type="hidden" name="longitude" placeholder="Longitude" value={clickedLng} />
+		<input
+			required
+			readonly
+			type="number"
+			name="latitude"
+			placeholder="Latitude"
+			value={clickedLat.toFixed(2)}
+		/>
+		<input
+			required
+			readonly
+			type="number"
+			name="longitude"
+			placeholder="Longitude"
+			value={clickedLng.toFixed(2)}
+		/>
 		<div class="flex flex-row gap-2">
 			<input
 				required
@@ -68,7 +85,9 @@
 		<button type="submit">Submit</button>
 	</form>
 
-	<div class="absolute bottom-0 w-full bg-white p-4 flex flex-col gap-2 h-[20vh] overflow-y-auto">
+	<div
+		class="absolute top-1/2 -translate-y-1/2 left-4 shadow-lg w-2xs bg-white p-4 flex flex-col gap-2 h-[20vh] overflow-y-auto"
+	>
 		{#if loading}
 			<p>Loading...</p>
 		{/if}
