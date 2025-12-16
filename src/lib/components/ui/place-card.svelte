@@ -69,6 +69,8 @@
 				<p class="px-1 bg-blue-200 border border-blue-500">{tag}</p>
 			{/each}
 		</div>
+		<p class="px-1 bg-green-200 border border-green-500 self-start">{place.province}</p>
+		<p class="px-1 bg-orange-200 border border-orange-500 self-start">{place.productCategory}</p>
 		<p class="text-neutral-600">{place.address}</p>
 		{#if place.phoneNumber}
 			<a

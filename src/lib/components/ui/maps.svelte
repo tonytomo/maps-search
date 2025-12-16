@@ -21,6 +21,7 @@
 	$: {
 		// TODO: Make better pinpoint using HTML
 		if (AdvancedMarkerElement && mapInstance) {
+			for (const marker of mapMarkers) marker.map = null;
 			for (const place of places) {
 				const newMarker = new AdvancedMarkerElement({
 					map: mapInstance,
@@ -28,7 +29,8 @@
 						lat: place.location.latitude,
 						lng: place.location.longitude
 					},
-					title: place.name
+					title: place.name,
+					gmpClickable: true
 				});
 				mapMarkers.push(newMarker);
 			}
@@ -45,8 +47,8 @@
 			AdvancedMarkerElement = element;
 
 			mapInstance = new Map(mapElement, {
-				center: DEFAULT_CENTER,
-				zoom: DEFAULT_ZOOM,
+				center: getLatestPos(),
+				zoom: getLatestZoom(),
 				mapId: mapId,
 				scaleControl: true,
 				mapTypeControl: false,
@@ -72,7 +74,6 @@
 				mapInstance.addListener('bounds_changed', () => {
 					if (!mapInstance) return;
 					const bounds = mapInstance.getBounds();
-
 					if (bounds) {
 						neCorner = {
 							latitude: bounds.getNorthEast().lat(),
@@ -82,13 +83,38 @@
 							latitude: bounds.getSouthWest().lat(),
 							longitude: bounds.getSouthWest().lng()
 						};
+
+						setLatestPos(bounds.getCenter());
 					}
+
+					const zoom = mapInstance.getZoom();
+					if (zoom) setLatestZoom(zoom);
 				});
 			}
 		} catch (e) {
 			console.error('Error loading Google Maps:', e);
 		}
 	});
+
+	function getLatestPos() {
+		const posJson = localStorage.getItem('pos');
+		if (posJson) return JSON.parse(posJson) as google.maps.LatLng;
+		return DEFAULT_CENTER;
+	}
+
+	function setLatestPos(pos: google.maps.LatLng) {
+		localStorage.setItem('pos', JSON.stringify(pos));
+	}
+
+	function getLatestZoom() {
+		const zoomJson = localStorage.getItem('zoom');
+		if (zoomJson) return JSON.parse(zoomJson) as number;
+		return DEFAULT_ZOOM as number;
+	}
+
+	function setLatestZoom(zoom: number) {
+		localStorage.setItem('zoom', JSON.stringify(zoom));
+	}
 </script>
 
 <div bind:this={mapElement} class="w-full h-screen"></div>

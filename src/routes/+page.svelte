@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { PUBLIC_MAP_ID, PUBLIC_MAPS_API_KEY } from '$env/static/public';
 	import Maps from '$lib/components/ui/maps.svelte';
 	import PlaceCard from '$lib/components/ui/place-card.svelte';
@@ -6,7 +7,7 @@
 	import { getPlacesInfo } from '$lib/utils/maps.util.js';
 	import { onMount } from 'svelte';
 
-	const title = 'This is a real life';
+	const title = 'Find business from google maps';
 
 	const apiKey = PUBLIC_MAPS_API_KEY;
 
@@ -60,14 +61,14 @@
 </svelte:head>
 
 <div class="flex w-screen h-screen">
-	<div class="max-w-lg bg-white flex flex-col p-2 gap-2 shadow-lg">
+	<div class="max-w-md bg-white flex flex-col p-2 gap-2 shadow-lg">
 		<form {onsubmit} class="flex flex-col gap-2">
 			<input
 				required
 				type="text"
 				name="search"
 				placeholder="Search"
-				class="shadow-inner py-2 bg-white"
+				class="shadow-inner p-2 bg-blue-100"
 			/>
 			<input type="hidden" name="nextPageToken" value={nextPageToken} />
 
@@ -82,6 +83,11 @@
 					Submit
 				{/if}
 			</button>
+
+			<a href={resolve('/show')} class="p-2 bg-green-500 flex justify-between">
+				<p>See table details</p>
+				<p>-></p>
+			</a>
 		</form>
 
 		<div class="flex flex-col gap-2 h-full overflow-y-auto">
