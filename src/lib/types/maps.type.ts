@@ -1,5 +1,6 @@
 export interface RawPlace {
 	id: string;
+	types: string[];
 	displayName: {
 		text: string;
 	};
@@ -19,6 +20,7 @@ export interface RawPlace {
 	}[];
 	internationalPhoneNumber: string;
 	nationalPhoneNumber: string;
+	location: Coordinate;
 }
 
 export interface MapsResponse {
@@ -36,9 +38,11 @@ export interface Place {
 	id: string;
 	name: string;
 	description: string;
+	tags: string[];
 	address: string;
 	regency: string;
 	province: string;
+	location: Coordinate;
 	productName: string;
 	productPictureUrl: string;
 	productDescription: string;
@@ -52,4 +56,9 @@ export interface Place {
 	facebook: string;
 	instagram: string;
 	email: string;
+}
+
+export interface Coordinate {
+	latitude: number;
+	longitude: number;
 }

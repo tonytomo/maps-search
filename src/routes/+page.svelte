@@ -2,21 +2,34 @@
 	import { PUBLIC_MAP_ID, PUBLIC_MAPS_API_KEY } from '$env/static/public';
 	import Maps from '$lib/components/ui/maps.svelte';
 	import PlaceCard from '$lib/components/ui/place-card.svelte';
-	import type { PlaceAPIResponse, Place } from '$lib/types/maps.type';
+	import type { PlaceAPIResponse, Place, Coordinate } from '$lib/types/maps.type';
 	import { getPlacesInfo } from '$lib/utils/maps.util.js';
+	import { onMount } from 'svelte';
 
 	const title = 'This is a real life';
 
 	const apiKey = PUBLIC_MAPS_API_KEY;
 
 	let loading = $state(false);
-	let radius = $state(10000);
 	let places = $state<Place[]>([]);
 	let nextPageToken = $state('');
 
-	let clickedLat: number = $state(-7.549);
-	let clickedLng: number = $state(110.735);
-	let isMarked: boolean = $state(false);
+	let neCorner: Coordinate = $state({
+		latitude: 0,
+		longitude: 0
+	});
+	let swCorner: Coordinate = $state({
+		latitude: 0,
+		longitude: 0
+	});
+
+	onMount(() => {
+		const resultJson = localStorage.getItem('curr');
+		if (resultJson) {
+			const result = JSON.parse(resultJson) as { places: Place[] };
+			places = result.places;
+		}
+	});
 
 	async function onsubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -27,7 +40,8 @@
 		const payload = {
 			latitude: Number(form.get('latitude') as string),
 			longitude: Number(form.get('longitude') as string),
-			radius: Number(form.get('radius') as string),
+			neCorner,
+			swCorner,
 			search: form.get('search') as string
 		};
 
@@ -45,63 +59,52 @@
 	<title>{title}</title>
 </svelte:head>
 
-<Maps {apiKey} mapId={PUBLIC_MAP_ID} {radius} bind:clickedLat bind:clickedLng bind:isMarked />
-
-{#if isMarked}
-	<form
-		{onsubmit}
-		class="absolute top-1/2 -translate-y-1/2 shadow-lg right-4 bg-white w-64 flex flex-col gap-2 p-4"
-	>
-		<input required type="text" name="search" placeholder="Search" />
-		<input
-			required
-			readonly
-			type="number"
-			name="latitude"
-			placeholder="Latitude"
-			value={clickedLat.toFixed(2)}
-		/>
-		<input
-			required
-			readonly
-			type="number"
-			name="longitude"
-			placeholder="Longitude"
-			value={clickedLng.toFixed(2)}
-		/>
-		<div class="flex flex-row gap-2">
+<div class="flex w-screen h-screen">
+	<div class="max-w-lg bg-white flex flex-col p-2 gap-2 shadow-lg">
+		<form {onsubmit} class="flex flex-col gap-2">
 			<input
 				required
-				type="range"
-				min="5000"
-				max="50000"
-				step="1000"
-				name="radius"
-				bind:value={radius}
+				type="text"
+				name="search"
+				placeholder="Search"
+				class="shadow-inner py-2 bg-white"
 			/>
-			<span>{radius}</span>
-		</div>
+			<input type="hidden" name="nextPageToken" value={nextPageToken} />
 
-		<button type="submit">Submit</button>
-	</form>
+			<button
+				type="submit"
+				disabled={loading}
+				class="cursor-pointer py-2 bg-blue-500 text-white disabled:bg-neutral-200 disabled:text-neutral-500"
+			>
+				{#if loading}
+					Loading
+				{:else}
+					Submit
+				{/if}
+			</button>
+		</form>
 
-	<div
-		class="absolute top-1/2 -translate-y-1/2 left-4 shadow-lg w-2xs bg-white p-4 flex flex-col gap-2 h-[20vh] overflow-y-auto"
-	>
-		{#if loading}
-			<p>Loading...</p>
-		{/if}
-
-		{#if !loading && places.length === 0}
-			<p>No places found</p>
-		{/if}
-
-		<div class="flex flex-col gap-2">
-			{#if places.length > 0}
-				{#each places as place (place.id)}
-					<PlaceCard {place} />
-				{/each}
+		<div class="flex flex-col gap-2 h-full overflow-y-auto">
+			{#if loading}
+				<p>Loading...</p>
 			{/if}
+
+			{#if !loading && places.length === 0}
+				<p>No places found</p>
+			{/if}
+
+			<div class="flex flex-col gap-2">
+				{#if places.length > 0}
+					<p class="p-2 bg-neutral-300">
+						{places.length} places found.
+					</p>
+					{#each places as place (place.id)}
+						<PlaceCard {place} />
+					{/each}
+				{/if}
+			</div>
 		</div>
 	</div>
-{/if}
+
+	<Maps {apiKey} mapId={PUBLIC_MAP_ID} {places} bind:neCorner bind:swCorner />
+</div>

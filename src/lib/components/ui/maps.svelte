@@ -1,38 +1,37 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
-	import { browser } from '$app/environment';
+	import type { Coordinate, Place } from '$lib/types/maps.type';
 
 	export let apiKey: string;
 	export let mapId: string;
 
-	let mounted = false;
 	let mapElement: HTMLDivElement;
 	let mapInstance: google.maps.Map | undefined;
-	let mapMarker: google.maps.marker.AdvancedMarkerElement | undefined;
-	let mapRadius: google.maps.Circle | undefined;
+	let AdvancedMarkerElement: typeof google.maps.marker.AdvancedMarkerElement | undefined;
+	let mapMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
 
-	export let clickedLat: number;
-	export let clickedLng: number;
-	export let radius: number;
-	export let isMarked: boolean;
+	export let neCorner: Coordinate;
+	export let swCorner: Coordinate;
+	export let places: Place[];
 
-	const DEFAULT_CENTER = { lat: clickedLat, lng: clickedLng };
+	const DEFAULT_CENTER = { lat: -7.549, lng: 110.735 };
 	const DEFAULT_ZOOM = 12;
 
 	$: {
-		if (mounted && isMarked) {
-			if (mapRadius) mapRadius.setMap(null);
-			mapRadius = new google.maps.Circle({
-				strokeColor: '#FF0000',
-				strokeOpacity: 0.8,
-				strokeWeight: 2,
-				fillColor: '#FF0000',
-				fillOpacity: 0.35,
-				map: mapInstance,
-				center: { lat: clickedLat, lng: clickedLng },
-				radius
-			});
+		// TODO: Make better pinpoint using HTML
+		if (AdvancedMarkerElement && mapInstance) {
+			for (const place of places) {
+				const newMarker = new AdvancedMarkerElement({
+					map: mapInstance,
+					position: {
+						lat: place.location.latitude,
+						lng: place.location.longitude
+					},
+					title: place.name
+				});
+				mapMarkers.push(newMarker);
+			}
 		}
 	}
 
@@ -40,52 +39,54 @@
 		try {
 			setOptions({ key: apiKey });
 
+			const { AdvancedMarkerElement: element } = await importLibrary('marker');
 			const { Map } = await importLibrary('maps');
-			const { AdvancedMarkerElement } = await importLibrary('marker');
+
+			AdvancedMarkerElement = element;
 
 			mapInstance = new Map(mapElement, {
 				center: DEFAULT_CENTER,
 				zoom: DEFAULT_ZOOM,
 				mapId: mapId,
-				scaleControl: true
+				scaleControl: true,
+				mapTypeControl: false,
+				fullscreenControl: false,
+				streetViewControl: false
+			});
+
+			mapInstance.setOptions({
+				styles: [
+					{
+						featureType: 'poi.business',
+						stylers: [{ visibility: 'off' }]
+					},
+					{
+						featureType: 'transit',
+						elementType: 'labels.icon',
+						stylers: [{ visibility: 'off' }]
+					}
+				]
 			});
 
 			if (mapInstance) {
-				mapInstance.addListener('click', (mapsMouseEvent: google.maps.MapMouseEvent) => {
-					const latLng = mapsMouseEvent.latLng;
+				mapInstance.addListener('bounds_changed', () => {
+					if (!mapInstance) return;
+					const bounds = mapInstance.getBounds();
 
-					if (latLng) {
-						const coords = latLng.toJSON();
-						clickedLat = coords.lat;
-						clickedLng = coords.lng;
-
-						if (mapMarker) mapMarker.map = null;
-						mapMarker = new AdvancedMarkerElement({
-							map: mapInstance,
-							position: coords,
-							title: 'Center Point'
-						});
-
-						if (mapRadius) mapRadius.setMap(null);
-						mapRadius = new google.maps.Circle({
-							strokeColor: '#FF0000',
-							strokeOpacity: 0.8,
-							strokeWeight: 2,
-							fillColor: '#FF0000',
-							fillOpacity: 0.35,
-							map: mapInstance,
-							center: { lat: clickedLat, lng: clickedLng },
-							radius
-						});
-
-						isMarked = true;
+					if (bounds) {
+						neCorner = {
+							latitude: bounds.getNorthEast().lat(),
+							longitude: bounds.getNorthEast().lng()
+						};
+						swCorner = {
+							latitude: bounds.getSouthWest().lat(),
+							longitude: bounds.getSouthWest().lng()
+						};
 					}
 				});
 			}
 		} catch (e) {
 			console.error('Error loading Google Maps:', e);
-		} finally {
-			mounted = true;
 		}
 	});
 </script>

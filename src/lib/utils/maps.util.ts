@@ -1,25 +1,21 @@
 import { PUBLIC_MAPS_API_KEY, PUBLIC_MAPS_API_URL } from '$env/static/public';
-import type { MapsResponse, Place, PlaceAPIResponse } from '$lib/types/maps.type';
+import type { Coordinate, MapsResponse, Place, PlaceAPIResponse } from '$lib/types/maps.type';
 
 interface Props {
-	latitude: number;
-	longitude: number;
-	radius: number;
+	neCorner: Coordinate;
+	swCorner: Coordinate;
 	search: string;
 }
 
 export async function getPlacesInfo({
-	latitude,
-	longitude,
-	radius,
+	neCorner,
+	swCorner,
 	search
 }: Props): Promise<PlaceAPIResponse | null> {
-	if (!latitude || !longitude || !radius || !search) {
-		let notFilled: string[] = [];
+	if (!neCorner || !swCorner || !search) {
+		const notFilled: string[] = [];
 
-		if (!latitude) notFilled.push('Latitude');
-		if (!longitude) notFilled.push('Longitude');
-		if (!radius) notFilled.push('Radius');
+		if (!neCorner || !swCorner) notFilled.push('Corners');
 		if (!search) notFilled.push('Search');
 
 		console.error('Input not filled:', notFilled.join(', '));
@@ -29,13 +25,16 @@ export async function getPlacesInfo({
 	const payload = {
 		languageCode: 'id',
 		textQuery: search,
-		locationBias: {
-			circle: {
-				center: {
-					latitude,
-					longitude
+		locationRestriction: {
+			rectangle: {
+				low: {
+					latitude: swCorner.latitude,
+					longitude: swCorner.longitude
 				},
-				radius
+				high: {
+					latitude: neCorner.latitude,
+					longitude: neCorner.longitude
+				}
 			}
 		}
 	};
@@ -63,6 +62,7 @@ export async function getPlacesInfo({
 			id: place.id,
 			name: place.displayName.text,
 			description: '',
+			tags: place.types,
 			address: place.shortFormattedAddress,
 			regency:
 				place.addressComponents.find((component) =>
@@ -72,6 +72,7 @@ export async function getPlacesInfo({
 				place.addressComponents.find((component) =>
 					component.types?.includes('administrative_area_level_1')
 				)?.shortText || '',
+			location: place.location,
 			productName: '',
 			productPictureUrl: '',
 			productDescription: '',
@@ -88,8 +89,24 @@ export async function getPlacesInfo({
 		};
 	});
 
-	return {
+	const result = {
 		places,
 		nextPageToken: data.nextPageToken
 	};
+
+	localStorage.setItem('curr', JSON.stringify(result));
+
+	return result;
+}
+
+export function getProvinces(places: Place[]) {
+	const provinces: string[] = [];
+
+	places.map((place) => {
+		if (!provinces.includes(place.province)) provinces.push(place.province);
+	});
+
+	console.log(provinces);
+
+	return provinces;
 }
