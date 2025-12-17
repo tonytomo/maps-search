@@ -23,6 +23,9 @@ jobs:
       - name: build
         env:
           BASE_PATH: '/${{ github.event.repository.name }}'
+          PUBLIC_MAPS_API_URL: ${{ secrets.PUBLIC_MAPS_API_URL }}
+          PUBLIC_MAPS_API_KEY: ${{ secrets.PUBLIC_MAPS_API_KEY }}
+          PUBLIC_MAP_ID: ${{ secrets.PUBLIC_MAP_ID }}
         run: |
           npm run build
 
