@@ -71,7 +71,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each places as place, i (place.id)}
+				{#each places as place (place.id)}
 					<tr>
 						<td>{place.name}</td>
 						<td>{place.description}</td>
