@@ -56,20 +56,6 @@
 				streetViewControl: false
 			});
 
-			mapInstance.setOptions({
-				styles: [
-					{
-						featureType: 'poi.business',
-						stylers: [{ visibility: 'off' }]
-					},
-					{
-						featureType: 'transit',
-						elementType: 'labels.icon',
-						stylers: [{ visibility: 'off' }]
-					}
-				]
-			});
-
 			if (mapInstance) {
 				mapInstance.addListener('bounds_changed', () => {
 					if (!mapInstance) return;
